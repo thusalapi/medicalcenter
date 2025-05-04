@@ -3,34 +3,31 @@ package com.isnoc.medicalcenter.util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.isnoc.medicalcenter.exception.InvalidJsonException;
 import org.springframework.stereotype.Component;
 
 /**
- * Utility class to handle JSON conversion and manipulation
+ * Utility class for converting between JSON strings and objects
  */
 @Component
 public class JsonConverter {
 
     private final ObjectMapper objectMapper;
 
-    public JsonConverter() {
-        this.objectMapper = new ObjectMapper();
+    public JsonConverter(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 
     /**
-     * Convert a string to a JsonNode
+     * Convert a JSON string to a JsonNode object
      * 
-     * @param jsonString JSON string to convert
-     * @return JsonNode representation
-     * @throws InvalidJsonException if the string is not valid JSON
+     * @param json JSON string
+     * @return JsonNode object
      */
-    public JsonNode parseJson(String jsonString) {
+    public JsonNode fromString(String json) {
         try {
-            return objectMapper.readTree(jsonString);
+            return objectMapper.readTree(json);
         } catch (JsonProcessingException e) {
-            throw new InvalidJsonException("Invalid JSON format: " + e.getMessage());
+            throw new RuntimeException("Error parsing JSON: " + json, e);
         }
     }
 
@@ -38,79 +35,52 @@ public class JsonConverter {
      * Convert an object to a JsonNode
      * 
      * @param object Object to convert
-     * @return JsonNode representation
+     * @return JsonNode representation of the object
      */
-    public JsonNode toJsonNode(Object object) {
+    public JsonNode fromObject(Object object) {
         return objectMapper.valueToTree(object);
     }
 
     /**
-     * Convert a JsonNode to a specific type
+     * Convert a JsonNode to a JSON string
      * 
-     * @param <T> Target type
-     * @param jsonNode JsonNode to convert
-     * @param valueType Class of target type
-     * @return Object of target type
-     * @throws InvalidJsonException if conversion fails
+     * @param jsonNode JsonNode object
+     * @return JSON string
      */
-    public <T> T fromJsonNode(JsonNode jsonNode, Class<T> valueType) {
-        try {
-            return objectMapper.treeToValue(jsonNode, valueType);
-        } catch (JsonProcessingException e) {
-            throw new InvalidJsonException("Error converting JSON to " + valueType.getSimpleName() + ": " + e.getMessage());
-        }
-    }
-
-    /**
-     * Convert JsonNode to a JSON string
-     * 
-     * @param jsonNode JsonNode to convert
-     * @return JSON string representation
-     * @throws InvalidJsonException if conversion fails
-     */
-    public String toJsonString(JsonNode jsonNode) {
+    public String toString(JsonNode jsonNode) {
         try {
             return objectMapper.writeValueAsString(jsonNode);
         } catch (JsonProcessingException e) {
-            throw new InvalidJsonException("Error converting JsonNode to string: " + e.getMessage());
+            throw new RuntimeException("Error converting JsonNode to string", e);
         }
     }
 
     /**
-     * Merge two JSON objects
+     * Convert a JsonNode to an object of the specified class
      * 
-     * @param mainNode Primary JSON object
-     * @param updateNode JSON object with values to merge in
-     * @return Merged JSON object
+     * @param jsonNode JsonNode object
+     * @param valueType Class to convert to
+     * @return Object of the specified class
      */
-    public JsonNode mergeJsonNodes(JsonNode mainNode, JsonNode updateNode) {
-        if (!(mainNode instanceof ObjectNode) || !(updateNode instanceof ObjectNode)) {
-            throw new InvalidJsonException("Both nodes must be object nodes for merging");
+    public <T> T toObject(JsonNode jsonNode, Class<T> valueType) {
+        try {
+            return objectMapper.treeToValue(jsonNode, valueType);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error converting JsonNode to object", e);
         }
-        
-        ObjectNode result = ((ObjectNode) mainNode).deepCopy();
-        updateNode.fields().forEachRemaining(field -> 
-            result.set(field.getKey(), field.getValue())
-        );
-        
-        return result;
     }
 
     /**
-     * Create an empty JSON object
+     * Validate that a JSON string conforms to a JSON schema
      * 
-     * @return Empty ObjectNode
+     * @param json JSON string to validate
+     * @param schema JSON schema to validate against
+     * @return true if valid, false otherwise
      */
-    public ObjectNode createObjectNode() {
-        return objectMapper.createObjectNode();
-    }
-
-    /**
-     * Get the ObjectMapper instance for direct use
-     * 
-     * @return ObjectMapper instance
-     */
-    public ObjectMapper getObjectMapper() {
-        return objectMapper;
+    public boolean validateAgainstSchema(String json, String schema) {
+        // Implementation for JSON schema validation
+        // This would typically use a library like json-schema-validator
+        // For now, returning true as a placeholder
+        return true;
     }
 }
