@@ -5,45 +5,42 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-@Converter(autoApply = true) // Automatically apply to JsonNode fields
-@Component // Allows ObjectMapper injection
-@RequiredArgsConstructor // Injects ObjectMapper via constructor
-@Slf4j
+/**
+ * JPA Converter to automatically handle conversion between JsonNode and String (for database storage)
+ */
+@Converter
+@Component
 public class JsonNodeConverter implements AttributeConverter<JsonNode, String> {
 
-    private final ObjectMapper objectMapper; // Inject Spring's configured ObjectMapper
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public String convertToDatabaseColumn(JsonNode attribute) {
-        if (attribute == null) {
+    public String convertToDatabaseColumn(JsonNode jsonNode) {
+        if (jsonNode == null) {
             return null;
         }
+
         try {
-            return objectMapper.writeValueAsString(attribute);
+            return objectMapper.writeValueAsString(jsonNode);
         } catch (JsonProcessingException e) {
-            log.error("Error converting JsonNode to String", e);
-            // Consider throwing a runtime exception or returning a specific error string
-            return null;
+            throw new RuntimeException("Error converting JsonNode to JSON string", e);
         }
     }
 
     @Override
-    public JsonNode convertToEntityAttribute(String dbData) {
-        if (dbData == null || dbData.isEmpty()) {
-            return null;
+    public JsonNode convertToEntityAttribute(String json) {
+        if (json == null || json.isEmpty()) {
+            return objectMapper.createObjectNode(); // Return empty object
         }
+
         try {
-            return objectMapper.readTree(dbData);
+            return objectMapper.readTree(json);
         } catch (IOException e) {
-            log.error("Error converting String to JsonNode", e);
-            // Consider throwing a runtime exception or returning null/empty node
-            return null;
+            throw new RuntimeException("Error converting JSON string to JsonNode", e);
         }
     }
 }

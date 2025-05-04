@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 public class ReportTypeDTO {
     private Long reportTypeId;
     private String reportName;
-    private JsonNode reportTemplate; // Full template needed for admin UI
+    private JsonNode reportTemplate;
 }
