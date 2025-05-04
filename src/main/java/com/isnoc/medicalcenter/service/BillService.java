@@ -1,12 +1,18 @@
 package com.isnoc.medicalcenter.service;
 
-import com.isnoc.medicalcenter.dto.CreateBillRequest;
 import com.isnoc.medicalcenter.entity.Bill;
+import com.isnoc.medicalcenter.entity.BillItem;
 
-import java.util.Optional;
+import java.math.BigDecimal;
+import java.util.List;
 
 public interface BillService {
-    Bill createBill(CreateBillRequest request);
+    Bill createBill(Long visitId);
     Bill getBillById(Long billId);
-    Optional<Bill> getBillByVisitId(Long visitId);
+    Bill getBillByVisitId(Long visitId);
+    BillItem addItemToBill(Long billId, String description, BigDecimal amount);
+    List<BillItem> getBillItems(Long billId);
+    void removeBillItem(Long billId, Long billItemId);
+    Bill recalculateBillTotal(Long billId);
+    byte[] generateBillPdf(Long billId);
 }

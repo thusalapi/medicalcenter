@@ -10,12 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateReportRequest {
-    @NotNull(message = "Visit ID cannot be null")
-    private Long visitId;
-
-    @NotNull(message = "Report Type ID cannot be null")
+    @NotNull(message = "Report type ID cannot be null")
     private Long reportTypeId;
 
     @NotNull(message = "Report data cannot be null")
-    private JsonNode reportData;
+    private JsonNode reportData; // Actual values entered for the report
 }

@@ -1,7 +1,6 @@
 package com.isnoc.medicalcenter.dto;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,9 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateReportTypeRequest {
-//    @NotBlank(message = "Report name cannot be blank")
-//    private String reportName;
-
-    @NotNull(message = "Report template cannot be null")
-    private JsonNode reportTemplate; // Sent from the Report Designer UI
+    private String reportName; // Can be null if not updating
+    private JsonNode reportTemplate; // Can be null if not updating
 }
