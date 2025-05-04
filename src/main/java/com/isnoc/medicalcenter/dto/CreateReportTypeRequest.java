@@ -11,9 +11,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateReportTypeRequest {
+
     @NotBlank(message = "Report name cannot be blank")
     private String reportName;
 
     @NotNull(message = "Report template cannot be null")
-    private JsonNode reportTemplate; // Sent from the Report Designer UI
+    private JsonNode reportTemplate; // This will contain the template structure including field positions
 }

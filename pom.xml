@@ -12,7 +12,7 @@
     <artifactId>medicalcenter</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>medicalcenter</name>
-    <description>medicalcenter</description>
+    <description>Medical Center Management System</description>
     <url/>
     <licenses>
         <license/>
@@ -28,6 +28,8 @@
     </scm>
     <properties>
         <java.version>17</java.version>
+        <node.version>v18.12.1</node.version>
+        <npm.version>8.19.2</npm.version>
     </properties>
     <dependencies>
         <dependency>
@@ -42,13 +44,30 @@
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
-            <version>3.42.0.0</version> <!-- Use the latest version -->
+            <version>3.42.0.0</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-community-dialects</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>2.0.27</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox-tools</artifactId>
+            <version>2.0.27</version>
         </dependency>
 
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
-            <version>3.0.2</version> <!-- Use the latest version -->
+            <version>3.0.2</version>
         </dependency>
 
         <dependency>
@@ -69,10 +88,13 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
@@ -81,6 +103,8 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <executable>true</executable>
+                    <mainClass>com.isnoc.medicalcenter.LauncherApplication</mainClass>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
@@ -88,8 +112,127 @@
                         </exclude>
                     </excludes>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            
+            <!-- Plugin to build frontend (Next.js static export) -->
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>1.12.1</version>
+                <configuration>
+                    <workingDirectory>${project.basedir}/frontend</workingDirectory>
+                    <installDirectory>target</installDirectory>
+                </configuration>
+                <executions>
+                    <!-- Install Node and NPM -->
+                    <execution>
+                        <id>install-node-and-npm</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <configuration>
+                            <nodeVersion>${node.version}</nodeVersion>
+                            <npmVersion>${npm.version}</npmVersion>
+                        </configuration>
+                    </execution>
+                    
+                    <!-- Install dependencies -->
+                    <execution>
+                        <id>npm-install</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>install</arguments>
+                        </configuration>
+                    </execution>
+                    
+                    <!-- Build production version -->
+                    <execution>
+                        <id>npm-build</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>run build</arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            
+            <!-- Copy frontend build to static resources -->
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/classes/static</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/frontend/out</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            
+            <!-- Launch4j to create Windows EXE -->
+            <plugin>
+                <groupId>com.akathist.maven.plugins.launch4j</groupId>
+                <artifactId>launch4j-maven-plugin</artifactId>
+                <version>2.3.2</version>
+                <executions>
+                    <execution>
+                        <id>l4j-gui</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>launch4j</goal>
+                        </goals>
+                        <configuration>
+                            <headerType>gui</headerType>
+                            <outfile>${project.build.directory}/MedicalCenterSystem.exe</outfile>
+                            <jar>${project.build.directory}/${project.build.finalName}.jar</jar>
+                            <errTitle>Medical Center System</errTitle>
+                            <classPath>
+                                <mainClass>com.isnoc.medicalcenter.LauncherApplication</mainClass>
+                            </classPath>
+                            <jre>
+                                <path>./jre</path>
+                                <minVersion>17</minVersion>
+                                <bundledJre64Bit>true</bundledJre64Bit>
+                                <bundledJreAsFallback>false</bundledJreAsFallback>
+                                <jdkPreference>jreOnly</jdkPreference>
+                            </jre>
+                            <versionInfo>
+                                <fileVersion>1.0.0.0</fileVersion>
+                                <txtFileVersion>1.0.0.0</txtFileVersion>
+                                <fileDescription>Medical Center Management System</fileDescription>
+                                <copyright>Copyright © 2025</copyright>
+                                <productVersion>1.0.0.0</productVersion>
+                                <txtProductVersion>1.0.0.0</txtProductVersion>
+                                <productName>Medical Center Management System</productName>
+                                <internalName>MedicalCenterSystem</internalName>
+                                <originalFilename>MedicalCenterSystem.exe</originalFilename>
+                            </versionInfo>
+                            <icon>src/main/resources/static/app-icon.ico</icon>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
-
 </project>
