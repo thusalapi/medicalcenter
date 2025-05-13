@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import com.isnoc.medicalcenter.util.JsonNodeConverter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "report_types")
 @Data
@@ -21,8 +23,17 @@ public class ReportType {
 
     @Column(unique = true, nullable = false)
     private String reportName;
+    
+    @Column(columnDefinition = "TEXT")
+    private String description;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     @Convert(converter = JsonNodeConverter.class)
     private JsonNode reportTemplate; // Structure defined by Admin UI
+    
+    @Column(nullable = false)
+    private LocalDateTime createdDate = LocalDateTime.now();
+
+    @Column(nullable = false)
+    private LocalDateTime lastModifiedDate = LocalDateTime.now();
 }
