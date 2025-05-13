@@ -120,18 +120,17 @@
                     </execution>
                 </executions>
             </plugin>
-            
-            <!-- Plugin to build frontend (Next.js static export) -->
+              <!-- Plugin to build frontend (Next.js static export) - Commented out for development -->
+            <!--
             <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
                 <version>1.12.1</version>
                 <configuration>
-                    <workingDirectory>${project.basedir}/frontend</workingDirectory>
+                    <workingDirectory>${project.basedir}/../medicalcenterfe</workingDirectory>
                     <installDirectory>target</installDirectory>
                 </configuration>
                 <executions>
-                    <!-- Install Node and NPM -->
                     <execution>
                         <id>install-node-and-npm</id>
                         <goals>
@@ -143,7 +142,6 @@
                         </configuration>
                     </execution>
                     
-                    <!-- Install dependencies -->
                     <execution>
                         <id>npm-install</id>
                         <goals>
@@ -154,7 +152,6 @@
                         </configuration>
                     </execution>
                     
-                    <!-- Build production version -->
                     <execution>
                         <id>npm-build</id>
                         <goals>
@@ -167,7 +164,6 @@
                 </executions>
             </plugin>
             
-            <!-- Copy frontend build to static resources -->
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
@@ -181,7 +177,7 @@
                             <outputDirectory>${project.build.directory}/classes/static</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>${project.basedir}/frontend/out</directory>
+                                    <directory>${project.basedir}/../medicalcenterfe/out</directory>
                                     <filtering>false</filtering>
                                 </resource>
                             </resources>
@@ -189,6 +185,7 @@
                     </execution>
                 </executions>
             </plugin>
+            -->
             
             <!-- Launch4j to create Windows EXE -->
             <plugin>

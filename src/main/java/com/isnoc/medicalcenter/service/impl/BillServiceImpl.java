@@ -133,20 +133,26 @@ public class BillServiceImpl implements BillService {
     public byte[] generateBillPdf(Long billId) {
         Bill bill = getBillById(billId);
         Visit visit = bill.getVisit();
+        List<BillItem> items = bill.getItems();
         
         try (PDDocument document = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.A4);
             document.addPage(page);
             
+            float margin = 50;
+            float yStart = page.getMediaBox().getHeight() - margin;
+            float tableWidth = page.getMediaBox().getWidth() - 2 * margin;
+            float yPosition = yStart;
+            float rowHeight = 20f;
+              // Format currency
+            NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.US);
+            currencyFormat.setCurrency(Currency.getInstance("USD"));
+            
+            // Track which item we're processing across pages
+            int itemIndex = 0;
+            
+            // First page content
             try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
-                // Set up formatting
-                float margin = 50;
-                float yStart = page.getMediaBox().getHeight() - margin;
-                float tableWidth = page.getMediaBox().getWidth() - 2 * margin;
-                float yPosition = yStart;
-                float rowHeight = 20f;
-                float cellMargin = 5f;
-                
                 // Title
                 contentStream.beginText();
                 contentStream.setFont(PDType1Font.HELVETICA_BOLD, 14);
@@ -159,58 +165,57 @@ public class BillServiceImpl implements BillService {
                 contentStream.beginText();
                 contentStream.setFont(PDType1Font.HELVETICA, 12);
                 contentStream.newLineAtOffset(margin, yPosition);
-                contentStream.showText("Bill #: " + bill.getBillId());
+                contentStream.showText("Bill Number: " + bill.getBillId());
                 contentStream.endText();
                 yPosition -= rowHeight;
                 
                 contentStream.beginText();
-                contentStream.setFont(PDType1Font.HELVETICA, 12);
                 contentStream.newLineAtOffset(margin, yPosition);
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-                contentStream.showText("Date: " + bill.getBillDate().format(formatter));
+                contentStream.showText("Date: " + 
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").format(bill.getBillDate()));
                 contentStream.endText();
                 yPosition -= rowHeight;
                 
-                // Patient info
                 contentStream.beginText();
-                contentStream.setFont(PDType1Font.HELVETICA, 12);
                 contentStream.newLineAtOffset(margin, yPosition);
                 contentStream.showText("Patient: " + visit.getPatient().getName());
                 contentStream.endText();
                 yPosition -= rowHeight;
                 
                 contentStream.beginText();
-                contentStream.setFont(PDType1Font.HELVETICA, 12);
                 contentStream.newLineAtOffset(margin, yPosition);
-                contentStream.showText("Phone: " + visit.getPatient().getPhoneNumber());
+                contentStream.showText("Patient ID: " + visit.getPatient().getPatientId());
                 contentStream.endText();
-                yPosition -= 40;
+                yPosition -= rowHeight * 1.5f;
                 
-                // Items Table Header
-                contentStream.beginText();
+                // Table header
                 contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
+                contentStream.beginText();
                 contentStream.newLineAtOffset(margin, yPosition);
                 contentStream.showText("Description");
                 contentStream.endText();
                 
                 contentStream.beginText();
-                contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
                 contentStream.newLineAtOffset(margin + tableWidth - 100, yPosition);
                 contentStream.showText("Amount");
                 contentStream.endText();
-                yPosition -= 20;
                 
-                // Draw line under header
+                yPosition -= 15; 
+                
+                // Line below header
                 contentStream.setLineWidth(0.5f);
                 contentStream.moveTo(margin, yPosition);
                 contentStream.lineTo(margin + tableWidth, yPosition);
                 contentStream.stroke();
+                
                 yPosition -= 15;
                 
-                // Bill items
-                NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.US);
+                // Bill items - display as many as will fit on first page
+                contentStream.setFont(PDType1Font.HELVETICA, 12);
                 
-                for (BillItem item : bill.getItems()) {
+                while (itemIndex < items.size() && yPosition >= 100) {
+                    BillItem item = items.get(itemIndex);
+                    
                     // Description
                     contentStream.beginText();
                     contentStream.setFont(PDType1Font.HELVETICA, 12);
@@ -227,46 +232,101 @@ public class BillServiceImpl implements BillService {
                     contentStream.endText();
                     
                     yPosition -= rowHeight;
-                    
-                    // Check if we need a new page
-                    if (yPosition < 100) {
-                        contentStream.close();
-                        PDPage newPage = new PDPage(PDRectangle.A4);
-                        document.addPage(newPage);
-                        contentStream = new PDPageContentStream(document, newPage);
-                        yPosition = yStart;
-                    }
+                    itemIndex++;
                 }
                 
-                // Draw line above total
-                yPosition -= 10;
-                contentStream.setLineWidth(0.5f);
-                contentStream.moveTo(margin, yPosition);
-                contentStream.lineTo(margin + tableWidth, yPosition);
-                contentStream.stroke();
-                yPosition -= 20;
-                
-                // Total
-                contentStream.beginText();
-                contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
-                contentStream.newLineAtOffset(margin, yPosition);
-                contentStream.showText("Total Amount:");
-                contentStream.endText();
-                
-                String formattedTotal = currencyFormat.format(bill.getTotalAmount());
-                contentStream.beginText();
-                contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
-                contentStream.newLineAtOffset(margin + tableWidth - 100, yPosition);
-                contentStream.showText(formattedTotal);
-                contentStream.endText();
+                // If all items fit on the first page with room for the total
+                if (itemIndex >= items.size() && yPosition >= 50) {
+                    // Draw line above total
+                    yPosition -= 10;
+                    contentStream.setLineWidth(0.5f);
+                    contentStream.moveTo(margin, yPosition);
+                    contentStream.lineTo(margin + tableWidth, yPosition);
+                    contentStream.stroke();
+                    yPosition -= 15;
+                    
+                    // Total
+                    contentStream.beginText();
+                    contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
+                    contentStream.newLineAtOffset(margin + 50, yPosition);
+                    contentStream.showText("Total Amount: ");
+                    contentStream.endText();
+                    
+                    String formattedTotal = currencyFormat.format(bill.getTotalAmount());
+                    contentStream.beginText();
+                    contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
+                    contentStream.newLineAtOffset(margin + tableWidth - 100, yPosition);
+                    contentStream.showText(formattedTotal);
+                    contentStream.endText();
+                }
             }
             
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            document.save(outputStream);
-            return outputStream.toByteArray();
+            // If we need additional pages for remaining items or for the total
+            while (itemIndex < items.size() || (itemIndex >= items.size() && yPosition < 50)) {
+                // Create new page
+                PDPage newPage = new PDPage(PDRectangle.A4);
+                document.addPage(newPage);
+                yPosition = yStart;
+                
+                try (PDPageContentStream contentStream = new PDPageContentStream(document, newPage)) {
+                    // If we still have items to display
+                    while (itemIndex < items.size() && yPosition >= 100) {
+                        BillItem item = items.get(itemIndex);
+                        
+                        // Description
+                        contentStream.beginText();
+                        contentStream.setFont(PDType1Font.HELVETICA, 12);
+                        contentStream.newLineAtOffset(margin, yPosition);
+                        contentStream.showText(item.getItemDescription());
+                        contentStream.endText();
+                        
+                        // Amount
+                        String formattedAmount = currencyFormat.format(item.getAmount());
+                        contentStream.beginText();
+                        contentStream.setFont(PDType1Font.HELVETICA, 12);
+                        contentStream.newLineAtOffset(margin + tableWidth - 100, yPosition);
+                        contentStream.showText(formattedAmount);
+                        contentStream.endText();
+                        
+                        yPosition -= rowHeight;
+                        itemIndex++;
+                    }
+                    
+                    // If all items have been displayed and we have room for the total
+                    if (itemIndex >= items.size() && yPosition >= 50) {
+                        // Draw line above total
+                        yPosition -= 10;
+                        contentStream.setLineWidth(0.5f);
+                        contentStream.moveTo(margin, yPosition);
+                        contentStream.lineTo(margin + tableWidth, yPosition);
+                        contentStream.stroke();
+                        yPosition -= 15;
+                        
+                        // Total
+                        contentStream.beginText();                        contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
+                        contentStream.newLineAtOffset(margin + 50, yPosition);
+                        contentStream.showText("Total Amount: ");
+                        contentStream.endText();
+                        
+                        String formattedTotal = currencyFormat.format(bill.getTotalAmount());
+                        contentStream.beginText();
+                        contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
+                        contentStream.newLineAtOffset(margin + tableWidth - 100, yPosition);
+                        contentStream.showText(formattedTotal);
+                        contentStream.endText();
+                        
+                        // Exit the while loop since we've displayed everything
+                        break;
+                    }
+                }
+            }
             
+            // Convert document to byte array
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            document.save(baos);
+            return baos.toByteArray();
         } catch (IOException e) {
-            throw new RuntimeException("Error generating PDF for bill: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to generate bill PDF", e);
         }
     }
 }
