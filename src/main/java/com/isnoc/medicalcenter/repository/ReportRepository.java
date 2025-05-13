@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -18,7 +19,8 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
      */
     @Query("SELECT r FROM Report r WHERE r.visit.patient.patientId = :patientId")
     List<Report> findByPatientId(@Param("patientId") Long patientId);
-      /**
+    
+    /**
      * Find all reports for a specific visit
      * 
      * @param visitId ID of the visit
@@ -51,4 +53,12 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
      */
     @Query("SELECT r FROM Report r WHERE r.visit.visitId IN :visitIds")
     List<Report> findByVisitIdIn(@Param("visitIds") List<Long> visitIds);
+    
+    /**
+     * Count reports created after a specific date
+     * 
+     * @param date The date after which to count reports
+     * @return Count of reports
+     */
+    Long countByCreatedDateAfter(LocalDateTime date);
 }

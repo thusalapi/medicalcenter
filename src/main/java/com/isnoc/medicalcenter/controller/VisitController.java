@@ -3,10 +3,12 @@ package com.isnoc.medicalcenter.controller;
 import com.isnoc.medicalcenter.dto.CreateReportRequest;
 import com.isnoc.medicalcenter.dto.CreateVisitRequest;
 import com.isnoc.medicalcenter.dto.ReportDTO;
+import com.isnoc.medicalcenter.dto.StatisticsDTO;
 import com.isnoc.medicalcenter.dto.VisitDTO;
 import com.isnoc.medicalcenter.entity.Report;
 import com.isnoc.medicalcenter.entity.Visit;
 import com.isnoc.medicalcenter.service.ReportService;
+import com.isnoc.medicalcenter.service.StatisticsService;
 import com.isnoc.medicalcenter.service.VisitService;
 import com.isnoc.medicalcenter.util.MapperUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 @RestController
@@ -24,11 +28,13 @@ public class VisitController {
 
     private final VisitService visitService;
     private final ReportService reportService;
+    private final StatisticsService statisticsService;
 
     @Autowired
-    public VisitController(VisitService visitService, ReportService reportService) {
+    public VisitController(VisitService visitService, ReportService reportService, StatisticsService statisticsService) {
         this.visitService = visitService;
         this.reportService = reportService;
+        this.statisticsService = statisticsService;
     }
 
     @PostMapping
@@ -77,5 +83,14 @@ public class VisitController {
                 .map(MapperUtils::mapReportToDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(reportDTOs);
+    }
+
+    @GetMapping("/statistics")
+    public ResponseEntity<Map<String, Object>> getVisitStatistics() {
+        StatisticsDTO stats = statisticsService.getVisitStatistics();
+        Map<String, Object> response = new HashMap<>();
+        response.put("total", stats.getTotalVisits());
+        response.put("today", stats.getVisitsToday());
+        return ResponseEntity.ok(response);
     }
 }

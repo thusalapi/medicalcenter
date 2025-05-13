@@ -4,9 +4,11 @@ import com.isnoc.medicalcenter.dto.BillDTO;
 import com.isnoc.medicalcenter.dto.BillItemDTO;
 import com.isnoc.medicalcenter.dto.CreateBillItemRequest;
 import com.isnoc.medicalcenter.dto.CreateBillRequest;
+import com.isnoc.medicalcenter.dto.StatisticsDTO;
 import com.isnoc.medicalcenter.entity.Bill;
 import com.isnoc.medicalcenter.entity.BillItem;
 import com.isnoc.medicalcenter.service.BillService;
+import com.isnoc.medicalcenter.service.StatisticsService;
 import com.isnoc.medicalcenter.util.MapperUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -16,7 +18,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -24,10 +28,22 @@ import java.util.stream.Collectors;
 public class BillController {
 
     private final BillService billService;
+    private final StatisticsService statisticsService;
 
     @Autowired
-    public BillController(BillService billService) {
+    public BillController(BillService billService, StatisticsService statisticsService) {
         this.billService = billService;
+        this.statisticsService = statisticsService;
+    }
+    
+    @GetMapping("/statistics")
+    public ResponseEntity<Map<String, Object>> getBillingStatistics() {
+        StatisticsDTO stats = statisticsService.getBillingStatistics();
+        Map<String, Object> response = new HashMap<>();
+        response.put("totalRevenue", stats.getTotalRevenue());
+        response.put("monthlyRevenue", stats.getMonthlyRevenue());
+        response.put("todayRevenue", stats.getTodayRevenue());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping

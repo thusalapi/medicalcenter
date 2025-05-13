@@ -2,8 +2,10 @@ package com.isnoc.medicalcenter.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.isnoc.medicalcenter.dto.ReportDTO;
+import com.isnoc.medicalcenter.dto.StatisticsDTO;
 import com.isnoc.medicalcenter.entity.Report;
 import com.isnoc.medicalcenter.service.ReportService;
+import com.isnoc.medicalcenter.service.StatisticsService;
 import com.isnoc.medicalcenter.util.MapperUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -13,7 +15,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -21,10 +25,21 @@ import java.util.stream.Collectors;
 public class ReportController {
 
     private final ReportService reportService;
-
+    private final StatisticsService statisticsService;
+    
     @Autowired
-    public ReportController(ReportService reportService) {
+    public ReportController(ReportService reportService, StatisticsService statisticsService) {
         this.reportService = reportService;
+        this.statisticsService = statisticsService;
+    }
+    
+    @GetMapping("/statistics")
+    public ResponseEntity<Map<String, Object>> getReportStatistics() {
+        StatisticsDTO stats = statisticsService.getReportStatistics();
+        Map<String, Object> response = new HashMap<>();
+        response.put("total", stats.getTotalReports());
+        response.put("pendingReports", stats.getPendingReports());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
