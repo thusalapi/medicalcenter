@@ -16,15 +16,24 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
      * @param patientId ID of the patient
      * @return List of reports for the patient
      */
-    List<Report> findByPatientId(Long patientId);
-    
-    /**
+    @Query("SELECT r FROM Report r WHERE r.visit.patient.patientId = :patientId")
+    List<Report> findByPatientId(@Param("patientId") Long patientId);
+      /**
      * Find all reports for a specific visit
      * 
      * @param visitId ID of the visit
      * @return List of reports for the visit
      */
-    List<Report> findByVisitId(Long visitId);
+    @Query("SELECT r FROM Report r WHERE r.visit.visitId = :visitId")
+    List<Report> findByVisitId(@Param("visitId") Long visitId);
+    
+    /**
+     * Find all reports for a specific visit by visit's ID
+     * 
+     * @param visitId ID of the visit
+     * @return List of reports for the visit
+     */
+    List<Report> findByVisitVisitId(Long visitId);
     
     /**
      * Find all reports for a specific report type

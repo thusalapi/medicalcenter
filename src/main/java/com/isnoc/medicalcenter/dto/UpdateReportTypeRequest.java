@@ -10,5 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UpdateReportTypeRequest {
     private String reportName; // Can be null if not updating
+    private String description; // Can be null if not updating
     private JsonNode reportTemplate; // Can be null if not updating
 }

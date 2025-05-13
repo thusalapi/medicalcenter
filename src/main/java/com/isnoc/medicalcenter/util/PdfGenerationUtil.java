@@ -61,7 +61,7 @@ public class PdfGenerationUtil {
                 // Add patient info
                 contentStream.beginText();
                 contentStream.newLineAtOffset(MARGIN, yPosition);
-                contentStream.showText("Patient: " + report.getVisit().getPatient().getFullName());
+                contentStream.showText("Patient: " + report.getVisit().getPatient().getName());
                 contentStream.endText();
                 yPosition -= LEADING;
                 

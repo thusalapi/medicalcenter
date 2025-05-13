@@ -15,9 +15,12 @@ import java.util.stream.Collectors;
 public class MapperUtils {
 
     private final JsonConverter jsonConverter;
+    // Static instance for utility methods
+    private static MapperUtils instance;
 
     public MapperUtils(JsonConverter jsonConverter) {
         this.jsonConverter = jsonConverter;
+        instance = this;
     }
 
     /**
@@ -26,18 +29,19 @@ public class MapperUtils {
     public PatientDTO toPatientDTO(Patient patient) {
         if (patient == null) return null;
         
-        return PatientDTO.builder()
-                .id(patient.getId())
-                .patientId(patient.getPatientId())
-                .fullName(patient.getFullName())
-                .dateOfBirth(patient.getDateOfBirth())
-                .gender(patient.getGender())
-                .contactNumber(patient.getContactNumber())
-                .email(patient.getEmail())
-                .address(patient.getAddress())
-                .createdDate(patient.getCreatedDate())
-                .lastModifiedDate(patient.getLastModifiedDate())
-                .build();
+        PatientDTO dto = new PatientDTO();
+        dto.setPatientId(patient.getPatientId());
+        dto.setName(patient.getName());
+        dto.setPhoneNumber(patient.getPhoneNumber());
+        dto.setOtherDetails(patient.getOtherDetails());
+        return dto;
+    }
+
+    /**
+     * Static method for converting Patient entity to PatientDTO
+     */
+    public static PatientDTO mapPatientToDTO(Patient patient) {
+        return instance.toPatientDTO(patient);
     }
 
     /**
@@ -46,18 +50,24 @@ public class MapperUtils {
     public VisitDTO toVisitDTO(Visit visit) {
         if (visit == null) return null;
         
-        VisitDTO dto = VisitDTO.builder()
-                .id(visit.getId())
-                .visitDate(visit.getVisitDate())
-                .reason(visit.getReason())
-                .notes(visit.getNotes())
-                .patient(toPatientDTO(visit.getPatient()))
-                .status(visit.getStatus())
-                .createdDate(visit.getCreatedDate())
-                .lastModifiedDate(visit.getLastModifiedDate())
-                .build();
+        VisitDTO dto = new VisitDTO();
+        dto.setVisitId(visit.getVisitId());
+        dto.setVisitDate(visit.getVisitDate());
+        
+        // Set patient info if available
+        if (visit.getPatient() != null) {
+            dto.setPatientId(visit.getPatient().getPatientId());
+            dto.setPatientName(visit.getPatient().getName());
+        }
         
         return dto;
+    }
+
+    /**
+     * Static method for converting Visit entity to VisitDTO
+     */
+    public static VisitDTO mapVisitToDTO(Visit visit) {
+        return instance.toVisitDTO(visit);
     }
 
     /**
@@ -66,15 +76,22 @@ public class MapperUtils {
     public ReportTypeDTO toReportTypeDTO(ReportType reportType) {
         if (reportType == null) return null;
         
-        return ReportTypeDTO.builder()
-                .id(reportType.getId())
-                .reportName(reportType.getReportName())
-                .schema(reportType.getSchema())
-                .template(reportType.getTemplate())
-                .active(reportType.isActive())
-                .createdDate(reportType.getCreatedDate())
-                .lastModifiedDate(reportType.getLastModifiedDate())
-                .build();
+        ReportTypeDTO dto = new ReportTypeDTO();
+        dto.setReportTypeId(reportType.getReportTypeId());
+        dto.setReportName(reportType.getReportName());
+          // Set template if available
+        if (reportType.getReportTemplate() != null) {
+            dto.setReportTemplate(reportType.getReportTemplate());
+        }
+        
+        return dto;
+    }
+
+    /**
+     * Static method for converting ReportType entity to ReportTypeDTO
+     */
+    public static ReportTypeDTO mapReportTypeToDTO(ReportType reportType) {
+        return instance.toReportTypeDTO(reportType);
     }
 
     /**
@@ -83,14 +100,32 @@ public class MapperUtils {
     public ReportDTO toReportDTO(Report report) {
         if (report == null) return null;
         
-        return ReportDTO.builder()
-                .id(report.getId())
-                .reportData(report.getReportData())
-                .visit(toVisitDTO(report.getVisit()))
-                .reportType(toReportTypeDTO(report.getReportType()))
-                .createdDate(report.getCreatedDate())
-                .lastModifiedDate(report.getLastModifiedDate())
-                .build();
+        ReportDTO dto = new ReportDTO();
+        dto.setReportId(report.getReportId());
+        dto.setReportData(report.getReportData());
+        
+        // Set visit information if available
+        if (report.getVisit() != null) {
+            dto.setVisitId(report.getVisit().getVisitId());
+        }
+        
+        // Set report type information if available
+        if (report.getReportType() != null) {
+            dto.setReportTypeId(report.getReportType().getReportTypeId());
+            dto.setReportTypeName(report.getReportType().getReportName());
+        }
+        
+        dto.setCreatedDate(report.getCreatedDate());
+        dto.setLastModifiedDate(report.getLastModifiedDate());
+        
+        return dto;
+    }
+
+    /**
+     * Static method for converting Report entity to ReportDTO
+     */
+    public static ReportDTO mapReportToDTO(Report report) {
+        return instance.toReportDTO(report);
     }
 
     /**
@@ -99,22 +134,16 @@ public class MapperUtils {
     public BillDTO toBillDTO(Bill bill) {
         if (bill == null) return null;
         
-        BillDTO dto = BillDTO.builder()
-                .id(bill.getId())
-                .billNumber(bill.getBillNumber())
-                .issuedDate(bill.getIssuedDate())
-                .dueDate(bill.getDueDate())
-                .totalAmount(bill.getTotalAmount())
-                .status(bill.getStatus())
-                .patient(toPatientDTO(bill.getPatient()))
-                .visit(toVisitDTO(bill.getVisit()))
-                .paymentMethod(bill.getPaymentMethod())
-                .createdDate(bill.getCreatedDate())
-                .lastModifiedDate(bill.getLastModifiedDate())
-                .build();
+        BillDTO dto = new BillDTO();
+        dto.setBillId(bill.getBillId());
+        if (bill.getVisit() != null) {
+            dto.setVisitId(bill.getVisit().getVisitId());
+        }
+        dto.setBillDate(bill.getBillDate());
+        dto.setTotalAmount(bill.getTotalAmount());
 
-        if (bill.getBillItems() != null) {
-            dto.setBillItems(bill.getBillItems().stream()
+        if (bill.getItems() != null) {
+            dto.setItems(bill.getItems().stream()
                     .map(this::toBillItemDTO)
                     .collect(Collectors.toList()));
         }
@@ -123,19 +152,31 @@ public class MapperUtils {
     }
 
     /**
+     * Static method for converting Bill entity to BillDTO
+     */
+    public static BillDTO mapBillToDTO(Bill bill) {
+        return instance.toBillDTO(bill);
+    }
+
+    /**
      * Convert BillItem entity to BillItemDTO
      */
     public BillItemDTO toBillItemDTO(BillItem billItem) {
         if (billItem == null) return null;
         
-        return BillItemDTO.builder()
-                .id(billItem.getId())
-                .description(billItem.getDescription())
-                .quantity(billItem.getQuantity())
-                .unitPrice(billItem.getUnitPrice())
-                .amount(billItem.getAmount())
-                .itemType(billItem.getItemType())
-                .build();
+        BillItemDTO dto = new BillItemDTO();
+        dto.setBillItemId(billItem.getBillItemId());
+        dto.setItemDescription(billItem.getItemDescription());
+        dto.setAmount(billItem.getAmount());
+        
+        return dto;
+    }
+
+    /**
+     * Static method for converting BillItem entity to BillItemDTO
+     */
+    public static BillItemDTO mapBillItemToDTO(BillItem billItem) {
+        return instance.toBillItemDTO(billItem);
     }
 
     /**

@@ -14,6 +14,8 @@ public class CreateReportTypeRequest {
 
     @NotBlank(message = "Report name cannot be blank")
     private String reportName;
+    
+    private String description;
 
     @NotNull(message = "Report template cannot be null")
     private JsonNode reportTemplate; // This will contain the template structure including field positions
