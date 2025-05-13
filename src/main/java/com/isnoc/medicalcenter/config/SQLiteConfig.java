@@ -1,58 +1,59 @@
 package com.isnoc.medicalcenter.config;
 
-import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
+import javax.sql.DataSource;
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.DriverManager;
 
 /**
  * SQLite configuration to ensure database file exists
  */
 @Configuration
 public class SQLiteConfig {
-    
-    @Value("${spring.datasource.url}")
-    private String jdbcUrl;
-    
-    /**
-     * Initialize the SQLite database file if it doesn't exist
-     */
-    @PostConstruct
-    public void initializeDatabase() {
-        try {
-            // Extract database file path from JDBC URL
-            if (jdbcUrl.startsWith("jdbc:sqlite:")) {
-                String dbFilePath = jdbcUrl.substring("jdbc:sqlite:".length());
-                
-                // Create database directory if it doesn't exist
-                Path dbPath = Paths.get(dbFilePath);
-                File parentDir = dbPath.getParent() != null ? 
-                        dbPath.getParent().toFile() : new File(".");
-                
-                if (!parentDir.exists()) {
-                    parentDir.mkdirs();
-                }
-                
+
+    @Bean
+    @Primary
+    public DataSource dataSource(DataSourceProperties properties) {
+        String url = properties.getUrl();
+        
+        // Extract database file path from JDBC URL
+        if (url.startsWith("jdbc:sqlite:")) {
+            String dbFilePath = url.substring("jdbc:sqlite:".length());
+            
+            // Create database directory if it doesn't exist
+            Path dbPath = Paths.get(dbFilePath);
+            File parentDir = dbPath.getParent() != null ? 
+                    dbPath.getParent().toFile() : new File(".");
+            
+            if (!parentDir.exists()) {
+                parentDir.mkdirs();
+            }
+            
+            try {
                 // Check if the file exists
                 File dbFile = dbPath.toFile();
                 if (!dbFile.exists()) {
-                    // Create an empty SQLite database by establishing a connection
-                    Class.forName("org.sqlite.JDBC");
-                    Connection conn = DriverManager.getConnection(jdbcUrl);
-                    if (conn != null) {
-                        System.out.println("Created database file: " + dbFilePath);
-                        conn.close();
-                    }
+                    // Create an empty file to ensure SQLite can connect
+                    dbFile.createNewFile();
+                    System.out.println("Created database file: " + dbFilePath);
                 }
+            } catch (Exception e) {
+                System.err.println("Error creating SQLite database file: " + e.getMessage());
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            System.err.println("Error initializing SQLite database: " + e.getMessage());
-            e.printStackTrace();
         }
+        
+        return DataSourceBuilder
+                .create()
+                .driverClassName(properties.getDriverClassName())
+                .url(properties.getUrl())
+                .build();
     }
 }
