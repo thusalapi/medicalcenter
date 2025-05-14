@@ -3,18 +3,12 @@ package com.isnoc.medicalcenter.entity;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import com.isnoc.medicalcenter.util.JsonNodeConverter;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "reports")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Report {
 
     @Id
@@ -38,4 +32,66 @@ public class Report {
 
     @Column(nullable = false)
     private LocalDateTime lastModifiedDate = LocalDateTime.now();
+    
+    // Constructors
+    public Report() {}
+    
+    public Report(Long reportId, Visit visit, ReportType reportType, JsonNode reportData, 
+                  LocalDateTime createdDate, LocalDateTime lastModifiedDate) {
+        this.reportId = reportId;
+        this.visit = visit;
+        this.reportType = reportType;
+        this.reportData = reportData;
+        this.createdDate = createdDate;
+        this.lastModifiedDate = lastModifiedDate;
+    }
+    
+    // Getters and setters
+    public Long getReportId() {
+        return reportId;
+    }
+    
+    public void setReportId(Long reportId) {
+        this.reportId = reportId;
+    }
+    
+    public Visit getVisit() {
+        return visit;
+    }
+    
+    public void setVisit(Visit visit) {
+        this.visit = visit;
+    }
+    
+    public ReportType getReportType() {
+        return reportType;
+    }
+    
+    public void setReportType(ReportType reportType) {
+        this.reportType = reportType;
+    }
+    
+    public JsonNode getReportData() {
+        return reportData;
+    }
+    
+    public void setReportData(JsonNode reportData) {
+        this.reportData = reportData;
+    }
+    
+    public LocalDateTime getCreatedDate() {
+        return createdDate;
+    }
+    
+    public void setCreatedDate(LocalDateTime createdDate) {
+        this.createdDate = createdDate;
+    }
+    
+    public LocalDateTime getLastModifiedDate() {
+        return lastModifiedDate;
+    }
+    
+    public void setLastModifiedDate(LocalDateTime lastModifiedDate) {
+        this.lastModifiedDate = lastModifiedDate;
+    }
 }
