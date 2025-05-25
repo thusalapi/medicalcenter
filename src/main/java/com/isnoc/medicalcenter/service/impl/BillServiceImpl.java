@@ -66,12 +66,16 @@ public class BillServiceImpl implements BillService {
     public Bill getBillById(Long billId) {
         return billRepository.findById(billId)
                 .orElseThrow(() -> new ResourceNotFoundException("Bill not found with id: " + billId));
-    }
-
+    }    
     @Override
     public Bill getBillByVisitId(Long visitId) {
         return billRepository.findByVisitVisitId(visitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Bill not found for visit with id: " + visitId));
+    }
+
+    @Override
+    public List<Bill> getAllBills() {
+        return billRepository.findAll();
     }
 
     @Override

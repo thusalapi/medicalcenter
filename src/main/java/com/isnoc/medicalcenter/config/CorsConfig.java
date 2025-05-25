@@ -13,8 +13,6 @@ public class CorsConfig {
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
-        
-        // Allow all origins for development (can be restricted in production)
         config.addAllowedOrigin("http://localhost:3000");
         
         // Allow common HTTP methods

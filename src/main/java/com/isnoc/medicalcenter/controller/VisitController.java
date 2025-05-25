@@ -82,7 +82,46 @@ public class VisitController {
         List<ReportDTO> reportDTOs = reports.stream()
                 .map(MapperUtils::mapReportToDTO)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(reportDTOs);
+        return ResponseEntity.ok(reportDTOs);    }
+
+    @GetMapping
+    public ResponseEntity<Map<String, Object>> getAllVisits(
+            @RequestParam(value = "search", required = false) String searchTerm,
+            @RequestParam(value = "dateFrom", required = false) String dateFrom,
+            @RequestParam(value = "dateTo", required = false) String dateTo,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "limit", defaultValue = "10") int limit) {
+        
+        // For now, return a simple implementation using existing methods
+        // In a real implementation, you would add proper search and pagination to the service layer
+        List<Visit> allVisits = visitService.getRecentVisits(1000); // Get a large number for now
+        
+        // Apply search filter if provided
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            allVisits = allVisits.stream()
+                .filter(visit -> visit.getPatient().getName().toLowerCase().contains(searchTerm.toLowerCase()) ||
+                               visit.getVisitId().toString().contains(searchTerm))
+                .collect(Collectors.toList());
+        }
+        
+        // Calculate pagination
+        int totalVisits = allVisits.size();
+        int startIndex = (page - 1) * limit;
+        int endIndex = Math.min(startIndex + limit, totalVisits);
+        
+        List<Visit> paginatedVisits = allVisits.subList(startIndex, endIndex);
+        List<VisitDTO> visitDTOs = paginatedVisits.stream()
+                .map(MapperUtils::mapVisitToDTO)
+                .collect(Collectors.toList());
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("visits", visitDTOs);
+        response.put("total", totalVisits);
+        response.put("page", page);
+        response.put("limit", limit);
+        response.put("totalPages", (int) Math.ceil((double) totalVisits / limit));
+        
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/statistics")

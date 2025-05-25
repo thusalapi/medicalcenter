@@ -94,9 +94,49 @@ public class BillController {
     @PutMapping("/{billId}/recalculate")
     public ResponseEntity<BillDTO> recalculateBillTotal(@PathVariable Long billId) {
         Bill updatedBill = billService.recalculateBillTotal(billId);
-        return ResponseEntity.ok(MapperUtils.mapBillToDTO(updatedBill));
-    }
+        return ResponseEntity.ok(MapperUtils.mapBillToDTO(updatedBill));    }
     
+    @GetMapping
+    public ResponseEntity<Map<String, Object>> getAllBills(
+            @RequestParam(value = "search", required = false) String searchTerm,
+            @RequestParam(value = "dateFrom", required = false) String dateFrom,
+            @RequestParam(value = "dateTo", required = false) String dateTo,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "limit", defaultValue = "10") int limit) {
+        
+        // For now, return a simple implementation using existing methods
+        // In a real implementation, you would add proper search and pagination to the service layer
+        List<Bill> allBills = billService.getAllBills(); // We need to add this method to the service
+        
+        // Apply search filter if provided
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            allBills = allBills.stream()
+                .filter(bill -> bill.getVisit().getPatient().getName().toLowerCase().contains(searchTerm.toLowerCase()) ||
+                               bill.getBillId().toString().contains(searchTerm))
+                .collect(Collectors.toList());
+        }
+        
+        // Calculate pagination
+        int totalBills = allBills.size();
+        int startIndex = (page - 1) * limit;
+        int endIndex = Math.min(startIndex + limit, totalBills);
+        
+        List<Bill> paginatedBills = allBills.subList(startIndex, endIndex);
+        List<BillDTO> billDTOs = paginatedBills.stream()
+                .map(MapperUtils::mapBillToDTO)
+                .collect(Collectors.toList());
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("bills", billDTOs);
+        response.put("total", totalBills);
+        response.put("page", page);
+        response.put("limit", limit);
+        response.put("totalPages", (int) Math.ceil((double) totalBills / limit));
+        
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{billId}/pdf")
     public ResponseEntity<byte[]> generateBillPdf(@PathVariable Long billId) {
         byte[] pdfContent = billService.generateBillPdf(billId);
