@@ -60,16 +60,14 @@ public class BillServiceImpl implements BillService {
         bill.setTotalAmount(BigDecimal.ZERO); // Initially zero, will be calculated when items are added
         
         return billRepository.save(bill);
-    }
-
-    @Override
+    }    @Override
     public Bill getBillById(Long billId) {
-        return billRepository.findById(billId)
+        return billRepository.findByIdFetchingItems(billId)
                 .orElseThrow(() -> new ResourceNotFoundException("Bill not found with id: " + billId));
     }    
     @Override
     public Bill getBillByVisitId(Long visitId) {
-        return billRepository.findByVisitVisitId(visitId)
+        return billRepository.findByVisitVisitIdFetchingItems(visitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Bill not found for visit with id: " + visitId));
     }
 
@@ -79,9 +77,13 @@ public class BillServiceImpl implements BillService {
     }
 
     @Override
+    public List<Bill> getAllBillsWithItems() {
+        return billRepository.findAllWithItemsAndPatient();
+    }    @Override
     @Transactional
     public BillItem addItemToBill(Long billId, String description, BigDecimal amount) {
-        Bill bill = getBillById(billId);
+        Bill bill = billRepository.findByIdFetchingItems(billId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bill not found with id: " + billId));
         
         BillItem item = new BillItem();
         item.setBill(bill);
@@ -96,18 +98,16 @@ public class BillServiceImpl implements BillService {
         billRepository.save(bill);
         
         return savedItem;
-    }
-
-    @Override
+    }@Override
     public List<BillItem> getBillItems(Long billId) {
-        Bill bill = getBillById(billId);
+        Bill bill = billRepository.findByIdFetchingItems(billId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bill not found with id: " + billId));
         return bill.getItems();
-    }
-
-    @Override
+    }    @Override
     @Transactional
     public void removeBillItem(Long billId, Long billItemId) {
-        Bill bill = getBillById(billId);
+        Bill bill = billRepository.findByIdFetchingItems(billId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bill not found with id: " + billId));
         
         BillItem item = billItemRepository.findById(billItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Bill item not found with id: " + billItemId));
@@ -123,19 +123,17 @@ public class BillServiceImpl implements BillService {
         // Recalculate bill total
         bill.calculateTotalAmount();
         billRepository.save(bill);
-    }
-
-    @Override
+    }    @Override
     @Transactional
     public Bill recalculateBillTotal(Long billId) {
-        Bill bill = getBillById(billId);
+        Bill bill = billRepository.findByIdFetchingItems(billId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bill not found with id: " + billId));
         bill.calculateTotalAmount();
         return billRepository.save(bill);
-    }
-
-    @Override
+    }@Override
     public byte[] generateBillPdf(Long billId) {
-        Bill bill = getBillById(billId);
+        Bill bill = billRepository.findByIdFetchingItems(billId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bill not found with id: " + billId));
         Visit visit = bill.getVisit();
         List<BillItem> items = bill.getItems();
         

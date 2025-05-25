@@ -104,10 +104,9 @@ public class BillController {
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "limit", defaultValue = "10") int limit) {
-        
-        // For now, return a simple implementation using existing methods
+          // For now, return a simple implementation using existing methods
         // In a real implementation, you would add proper search and pagination to the service layer
-        List<Bill> allBills = billService.getAllBills(); // We need to add this method to the service
+        List<Bill> allBills = billService.getAllBillsWithItems(); // Use eager fetching method
         
         // Apply search filter if provided
         if (searchTerm != null && !searchTerm.trim().isEmpty()) {
