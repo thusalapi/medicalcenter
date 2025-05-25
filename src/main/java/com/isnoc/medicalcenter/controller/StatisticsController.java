@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Controller for providing overall system statistics
  */
 @RestController
-@RequestMapping("/stats")
+@RequestMapping("/api/stats")
 public class StatisticsController {
     
     private final StatisticsService statisticsService;

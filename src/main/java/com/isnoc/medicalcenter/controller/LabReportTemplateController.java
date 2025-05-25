@@ -18,7 +18,7 @@ import java.util.*;
  * Controller for managing laboratory report templates
  */
 @RestController
-@RequestMapping("/lab-templates")
+@RequestMapping("/api/lab-templates")
 public class LabReportTemplateController {
 
     private final ReportTypeService reportTypeService;
