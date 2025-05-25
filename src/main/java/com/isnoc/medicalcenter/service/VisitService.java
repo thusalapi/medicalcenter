@@ -12,6 +12,7 @@ public interface VisitService {
     Visit getVisitById(Long visitId);
     List<Visit> getVisitHistoryForPatient(Long patientId);
     List<Visit> getRecentVisits(int limit);
+    List<Visit> getAllVisitsWithPatients(); // New method for fetching all visits with patients
     Report addReportToVisit(Long visitId, Long reportTypeId, JsonNode reportData);
     List<Report> getReportsForVisit(Long visitId);
 }

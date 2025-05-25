@@ -82,9 +82,7 @@ public class VisitController {
         List<ReportDTO> reportDTOs = reports.stream()
                 .map(MapperUtils::mapReportToDTO)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(reportDTOs);    }
-
-    @GetMapping
+        return ResponseEntity.ok(reportDTOs);    }    @GetMapping
     public ResponseEntity<Map<String, Object>> getAllVisits(
             @RequestParam(value = "search", required = false) String searchTerm,
             @RequestParam(value = "dateFrom", required = false) String dateFrom,
@@ -92,9 +90,8 @@ public class VisitController {
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "limit", defaultValue = "10") int limit) {
         
-        // For now, return a simple implementation using existing methods
-        // In a real implementation, you would add proper search and pagination to the service layer
-        List<Visit> allVisits = visitService.getRecentVisits(1000); // Get a large number for now
+        // Get all visits with patient data eagerly fetched to avoid LazyInitializationException
+        List<Visit> allVisits = visitService.getAllVisitsWithPatients();
         
         // Apply search filter if provided
         if (searchTerm != null && !searchTerm.trim().isEmpty()) {

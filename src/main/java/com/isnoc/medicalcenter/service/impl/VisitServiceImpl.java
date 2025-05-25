@@ -51,11 +51,9 @@ public class VisitServiceImpl implements VisitService {
         visit.setVisitDate(visitDate != null ? visitDate : LocalDateTime.now());
         
         return visitRepository.save(visit);
-    }
-
-    @Override
+    }    @Override
     public Visit getVisitById(Long visitId) {
-        return visitRepository.findById(visitId)
+        return visitRepository.findByIdWithPatient(visitId)
                 .orElseThrow(() -> new ResourceNotFoundException("Visit not found with id: " + visitId));
     }
 
@@ -67,13 +65,16 @@ public class VisitServiceImpl implements VisitService {
         }
         
         return visitRepository.findByPatientPatientIdOrderByVisitDateDesc(patientId);
-    }
-
-    @Override
+    }    @Override
     public List<Visit> getRecentVisits(int limit) {
-        return visitRepository.findAll(
+        return visitRepository.findRecentVisitsWithPatient(
                 PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "visitDate"))
-        ).getContent();
+        );
+    }
+    
+    @Override
+    public List<Visit> getAllVisitsWithPatients() {
+        return visitRepository.findAllWithPatient();
     }
 
     @Override
