@@ -180,6 +180,35 @@ public class MapperUtils {
     }
 
     /**
+     * Convert ReportTemplate entity to ReportTemplateDTO
+     */
+    public ReportTemplateDTO toReportTemplateDTO(ReportTemplate template) {
+        if (template == null) return null;
+        
+        ReportTemplateDTO dto = new ReportTemplateDTO();
+        dto.setTemplateId(template.getTemplateId());
+        dto.setTemplateName(template.getTemplateName());
+        dto.setDescription(template.getDescription());
+        dto.setCategory(template.getCategory());
+        dto.setStaticContent(template.getStaticContent());
+        dto.setDynamicFields(template.getDynamicFields());
+        dto.setLayoutConfig(template.getLayoutConfig());
+        dto.setIsActive(template.getIsActive());
+        dto.setCreatedDate(template.getCreatedDate());
+        dto.setLastModifiedDate(template.getLastModifiedDate());
+        dto.setCreatedBy(template.getCreatedBy());
+        
+        return dto;
+    }
+
+    /**
+     * Static method for converting ReportTemplate entity to ReportTemplateDTO
+     */
+    public static ReportTemplateDTO mapReportTemplateToDTO(ReportTemplate template) {
+        return instance.toReportTemplateDTO(template);
+    }
+
+    /**
      * Convert List of entities to List of DTOs
      */
     public List<PatientDTO> toPatientDTOList(List<Patient> patients) {
