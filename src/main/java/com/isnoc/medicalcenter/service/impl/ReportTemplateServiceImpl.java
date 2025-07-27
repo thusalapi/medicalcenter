@@ -7,11 +7,7 @@ import com.isnoc.medicalcenter.entity.ReportTemplate;
 import com.isnoc.medicalcenter.exception.ResourceNotFoundException;
 import com.isnoc.medicalcenter.repository.ReportTemplateRepository;
 import com.isnoc.medicalcenter.service.ReportTemplateService;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -156,6 +152,10 @@ public class ReportTemplateServiceImpl implements ReportTemplateService {
         // Get static content
         String reportContent = template.getStaticContent().get("content").asText();
         
+        // Log the original content and field values for debugging
+        System.out.println("Original template content: " + reportContent);
+        System.out.println("Field values provided: " + fieldValues);
+        
         // Replace dynamic field placeholders with actual values
         JsonNode dynamicFields = template.getDynamicFields();
         if (dynamicFields != null && dynamicFields.has("fields")) {
@@ -168,10 +168,25 @@ public class ReportTemplateServiceImpl implements ReportTemplateService {
                 Object value = fieldValues.get(fieldName);
                 String displayValue = value != null ? value.toString() : "";
                 
+                System.out.println("Replacing placeholder: " + placeholder + " with value: " + displayValue);
                 reportContent = reportContent.replace(placeholder, displayValue);
             }
         }
         
+        // Also handle standard patient fields that might be in the template
+        String[] standardFields = {"patientName", "patientAge", "patientGender", "patientPhone", "visitDate"};
+        for (String fieldName : standardFields) {
+            String placeholder = "{{" + fieldName + "}}";
+            Object value = fieldValues.get(fieldName);
+            String displayValue = value != null ? value.toString() : "";
+            
+            if (reportContent.contains(placeholder)) {
+                System.out.println("Replacing standard field: " + placeholder + " with value: " + displayValue);
+                reportContent = reportContent.replace(placeholder, displayValue);
+            }
+        }
+        
+        System.out.println("Final report content: " + reportContent);
         return reportContent;
     }
 
@@ -180,64 +195,67 @@ public class ReportTemplateServiceImpl implements ReportTemplateService {
         String reportContent = generateReportFromTemplate(templateId, fieldValues);
         ReportTemplate template = getTemplateById(templateId);
         
-        try (PDDocument document = new PDDocument()) {
-            PDPage page = new PDPage(PDRectangle.A4);
-            document.addPage(page);
+        try {
+            // Ensure the HTML content is properly formatted for PDF generation
+            String htmlContent = ensureValidHtml(reportContent, template.getTemplateName());
             
-            float margin = 50;
-            float yStart = page.getMediaBox().getHeight() - margin;
-            float yPosition = yStart;
-            float lineHeight = 15f;
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             
-            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
-                // Title
-                contentStream.beginText();
-                contentStream.setFont(PDType1Font.HELVETICA_BOLD, 16);
-                contentStream.newLineAtOffset(margin, yPosition);
-                contentStream.showText(template.getTemplateName());
-                contentStream.endText();
-                yPosition -= lineHeight * 2;
-                
-                // Content - split by lines and handle page breaks
-                String[] lines = reportContent.split("\n");
-                contentStream.setFont(PDType1Font.HELVETICA, 12);
-                
-                for (String line : lines) {
-                    if (yPosition <= margin) {
-                        // Need new page
-                        contentStream.close();
-                        
-                        PDPage newPage = new PDPage(PDRectangle.A4);
-                        document.addPage(newPage);
-                        yPosition = yStart;
-                        
-                        PDPageContentStream newContentStream = new PDPageContentStream(document, newPage);
-                        newContentStream.setFont(PDType1Font.HELVETICA, 12);
-                        
-                        newContentStream.beginText();
-                        newContentStream.newLineAtOffset(margin, yPosition);
-                        newContentStream.showText(line);
-                        newContentStream.endText();
-                        yPosition -= lineHeight;
-                        
-                        newContentStream.close();
-                    } else {
-                        contentStream.beginText();
-                        contentStream.newLineAtOffset(margin, yPosition);
-                        contentStream.showText(line);
-                        contentStream.endText();
-                        yPosition -= lineHeight;
-                    }
-                }
-            }
+            PdfRendererBuilder builder = new PdfRendererBuilder();
+            builder.withHtmlContent(htmlContent, null);
+            builder.toStream(outputStream);
+            builder.run();
             
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            document.save(baos);
-            return baos.toByteArray();
+            return outputStream.toByteArray();
             
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to generate report PDF", e);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate report PDF: " + e.getMessage(), e);
         }
+    }
+    
+    /**
+     * Ensures the HTML content is valid and properly formatted for PDF generation
+     */
+    private String ensureValidHtml(String htmlContent, String templateName) {
+        // If the content is already a complete HTML document, return as is
+        if (htmlContent.trim().toLowerCase().startsWith("<!doctype html") || 
+            htmlContent.trim().toLowerCase().startsWith("<html")) {
+            return htmlContent;
+        }
+        
+        // Otherwise, wrap the content in a minimal HTML structure that preserves the original layout
+        return String.format("""
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                    * { 
+                        margin: 0; 
+                        padding: 0; 
+                        box-sizing: border-box; 
+                    }
+                    body { 
+                        font-family: Arial, sans-serif; 
+                        margin: 0; 
+                        padding: 0;
+                        background: white;
+                    }
+                    @page {
+                        size: A4;
+                        margin: 0;
+                    }
+                    @media print {
+                        body { margin: 0; }
+                    }
+                </style>
+            </head>
+            <body>
+                %s
+            </body>
+            </html>
+            """, htmlContent);
     }
 
     @Override

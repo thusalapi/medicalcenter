@@ -76,6 +76,15 @@ public class VisitController {
         return ResponseEntity.status(HttpStatus.CREATED).body(MapperUtils.mapReportToDTO(report));
     }
 
+    @PostMapping("/{visitId}/reports/from-template/{templateId}")
+    public ResponseEntity<ReportDTO> createReportFromTemplate(
+            @PathVariable Long visitId,
+            @PathVariable Long templateId,
+            @RequestBody Map<String, Object> fieldValues) {
+        Report report = visitService.createReportFromTemplate(visitId, templateId, fieldValues);
+        return ResponseEntity.status(HttpStatus.CREATED).body(MapperUtils.mapReportToDTO(report));
+    }
+
     @GetMapping("/{visitId}/reports")
     public ResponseEntity<List<ReportDTO>> getReportsForVisit(@PathVariable Long visitId) {
         List<Report> reports = visitService.getReportsForVisit(visitId);

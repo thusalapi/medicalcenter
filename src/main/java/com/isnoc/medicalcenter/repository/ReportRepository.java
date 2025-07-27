@@ -17,7 +17,11 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
      * @param patientId ID of the patient
      * @return List of reports for the patient
      */
-    @Query("SELECT r FROM Report r WHERE r.visit.patient.patientId = :patientId")
+    @Query("SELECT r FROM Report r " +
+           "LEFT JOIN FETCH r.reportType " +
+           "LEFT JOIN FETCH r.visit v " +
+           "LEFT JOIN FETCH v.patient " +
+           "WHERE r.visit.patient.patientId = :patientId")
     List<Report> findByPatientId(@Param("patientId") Long patientId);
     
     /**
@@ -26,7 +30,11 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
      * @param visitId ID of the visit
      * @return List of reports for the visit
      */
-    @Query("SELECT r FROM Report r WHERE r.visit.visitId = :visitId")
+    @Query("SELECT r FROM Report r " +
+           "LEFT JOIN FETCH r.reportType " +
+           "LEFT JOIN FETCH r.visit v " +
+           "LEFT JOIN FETCH v.patient " +
+           "WHERE r.visit.visitId = :visitId")
     List<Report> findByVisitId(@Param("visitId") Long visitId);
     
     /**
@@ -44,6 +52,19 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
      * @return List of reports of the specified type
      */
     List<Report> findByReportTypeReportTypeId(Long reportTypeId);
+    
+    /**
+     * Find report by ID with eagerly loaded related entities
+     * 
+     * @param reportId ID of the report
+     * @return Report with eagerly loaded entities
+     */
+    @Query("SELECT r FROM Report r " +
+           "LEFT JOIN FETCH r.reportType " +
+           "LEFT JOIN FETCH r.visit v " +
+           "LEFT JOIN FETCH v.patient " +
+           "WHERE r.reportId = :reportId")
+    Report findByIdWithRelations(@Param("reportId") Long reportId);
     
     /**
      * Find reports by multiple visit IDs
