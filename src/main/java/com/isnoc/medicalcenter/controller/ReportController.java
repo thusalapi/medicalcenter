@@ -83,4 +83,29 @@ public class ReportController {
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdfBytes);
     }
+    
+    @GetMapping(value = "/{id}/pdf-with-labels", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> generateReportPdfWithLabels(@PathVariable("id") Long reportId) throws IOException {
+        Report report = reportService.getReportById(reportId);
+        byte[] pdfBytes = reportService.generateReportPdfWithLabels(reportId);
+        
+        String filename = "Report_" + reportId + "_" + report.getReportType().getReportName().replaceAll("\\s+", "_") + "_formatted.pdf";
+        
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
+    }
+    
+    @GetMapping("/{id}/field-labels")
+    public ResponseEntity<Map<String, String>> getFieldLabelsForReport(@PathVariable("id") Long reportId) {
+        Map<String, String> fieldLabels = reportService.getFieldLabelsForReport(reportId);
+        return ResponseEntity.ok(fieldLabels);
+    }
+    
+    @GetMapping("/{id}/data-with-labels")
+    public ResponseEntity<Map<String, Object>> getReportDataWithLabels(@PathVariable("id") Long reportId) {
+        Map<String, Object> reportDataWithLabels = reportService.getReportDataWithLabels(reportId);
+        return ResponseEntity.ok(reportDataWithLabels);
+    }
 }
