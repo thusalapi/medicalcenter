@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/report-templates")
+@RequestMapping("/api/report-templates")
 public class ReportTemplateController {
 
     private final ReportTemplateService templateService;

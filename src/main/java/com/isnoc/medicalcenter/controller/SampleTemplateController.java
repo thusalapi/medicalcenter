@@ -14,7 +14,7 @@ import java.util.Map;
  * Controller for creating sample report templates
  */
 @RestController
-@RequestMapping("/sample-templates")
+@RequestMapping("/api/sample-templates")
 public class SampleTemplateController {
 
     private final ReportTemplateService templateService;
