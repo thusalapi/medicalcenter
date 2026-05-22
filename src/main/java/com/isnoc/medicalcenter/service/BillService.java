@@ -10,6 +10,8 @@ public interface BillService {
     Bill createBill(Long visitId);
     Bill getBillById(Long billId);
     Bill getBillByVisitId(Long visitId);
+    List<Bill> getAllBills();
+    List<Bill> getAllBillsWithItems();
     BillItem addItemToBill(Long billId, String description, BigDecimal amount);
     List<BillItem> getBillItems(Long billId);
     void removeBillItem(Long billId, Long billItemId);

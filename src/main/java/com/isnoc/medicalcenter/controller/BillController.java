@@ -4,9 +4,11 @@ import com.isnoc.medicalcenter.dto.BillDTO;
 import com.isnoc.medicalcenter.dto.BillItemDTO;
 import com.isnoc.medicalcenter.dto.CreateBillItemRequest;
 import com.isnoc.medicalcenter.dto.CreateBillRequest;
+import com.isnoc.medicalcenter.dto.StatisticsDTO;
 import com.isnoc.medicalcenter.entity.Bill;
 import com.isnoc.medicalcenter.entity.BillItem;
 import com.isnoc.medicalcenter.service.BillService;
+import com.isnoc.medicalcenter.service.StatisticsService;
 import com.isnoc.medicalcenter.util.MapperUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -16,18 +18,32 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/bills")
+@RequestMapping("/api/bills")
 public class BillController {
 
     private final BillService billService;
+    private final StatisticsService statisticsService;
 
     @Autowired
-    public BillController(BillService billService) {
+    public BillController(BillService billService, StatisticsService statisticsService) {
         this.billService = billService;
+        this.statisticsService = statisticsService;
+    }
+    
+    @GetMapping("/statistics")
+    public ResponseEntity<Map<String, Object>> getBillingStatistics() {
+        StatisticsDTO stats = statisticsService.getBillingStatistics();
+        Map<String, Object> response = new HashMap<>();
+        response.put("totalRevenue", stats.getTotalRevenue());
+        response.put("monthlyRevenue", stats.getMonthlyRevenue());
+        response.put("todayRevenue", stats.getTodayRevenue());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping
@@ -78,9 +94,48 @@ public class BillController {
     @PutMapping("/{billId}/recalculate")
     public ResponseEntity<BillDTO> recalculateBillTotal(@PathVariable Long billId) {
         Bill updatedBill = billService.recalculateBillTotal(billId);
-        return ResponseEntity.ok(MapperUtils.mapBillToDTO(updatedBill));
-    }
+        return ResponseEntity.ok(MapperUtils.mapBillToDTO(updatedBill));    }
     
+    @GetMapping
+    public ResponseEntity<Map<String, Object>> getAllBills(
+            @RequestParam(value = "search", required = false) String searchTerm,
+            @RequestParam(value = "dateFrom", required = false) String dateFrom,
+            @RequestParam(value = "dateTo", required = false) String dateTo,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "limit", defaultValue = "10") int limit) {
+          // For now, return a simple implementation using existing methods
+        // In a real implementation, you would add proper search and pagination to the service layer
+        List<Bill> allBills = billService.getAllBillsWithItems(); // Use eager fetching method
+        
+        // Apply search filter if provided
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            allBills = allBills.stream()
+                .filter(bill -> bill.getVisit().getPatient().getName().toLowerCase().contains(searchTerm.toLowerCase()) ||
+                               bill.getBillId().toString().contains(searchTerm))
+                .collect(Collectors.toList());
+        }
+        
+        // Calculate pagination
+        int totalBills = allBills.size();
+        int startIndex = (page - 1) * limit;
+        int endIndex = Math.min(startIndex + limit, totalBills);
+        
+        List<Bill> paginatedBills = allBills.subList(startIndex, endIndex);
+        List<BillDTO> billDTOs = paginatedBills.stream()
+                .map(MapperUtils::mapBillToDTO)
+                .collect(Collectors.toList());
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("bills", billDTOs);
+        response.put("total", totalBills);
+        response.put("page", page);
+        response.put("limit", limit);
+        response.put("totalPages", (int) Math.ceil((double) totalBills / limit));
+        
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{billId}/pdf")
     public ResponseEntity<byte[]> generateBillPdf(@PathVariable Long billId) {
         byte[] pdfContent = billService.generateBillPdf(billId);

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -16,15 +17,24 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
      * @param patientId ID of the patient
      * @return List of reports for the patient
      */
-    @Query("SELECT r FROM Report r WHERE r.visit.patient.patientId = :patientId")
+    @Query("SELECT r FROM Report r " +
+           "LEFT JOIN FETCH r.reportType " +
+           "LEFT JOIN FETCH r.visit v " +
+           "LEFT JOIN FETCH v.patient " +
+           "WHERE r.visit.patient.patientId = :patientId")
     List<Report> findByPatientId(@Param("patientId") Long patientId);
-      /**
+    
+    /**
      * Find all reports for a specific visit
      * 
      * @param visitId ID of the visit
      * @return List of reports for the visit
      */
-    @Query("SELECT r FROM Report r WHERE r.visit.visitId = :visitId")
+    @Query("SELECT r FROM Report r " +
+           "LEFT JOIN FETCH r.reportType " +
+           "LEFT JOIN FETCH r.visit v " +
+           "LEFT JOIN FETCH v.patient " +
+           "WHERE r.visit.visitId = :visitId")
     List<Report> findByVisitId(@Param("visitId") Long visitId);
     
     /**
@@ -44,6 +54,19 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     List<Report> findByReportTypeReportTypeId(Long reportTypeId);
     
     /**
+     * Find report by ID with eagerly loaded related entities
+     * 
+     * @param reportId ID of the report
+     * @return Report with eagerly loaded entities
+     */
+    @Query("SELECT r FROM Report r " +
+           "LEFT JOIN FETCH r.reportType " +
+           "LEFT JOIN FETCH r.visit v " +
+           "LEFT JOIN FETCH v.patient " +
+           "WHERE r.reportId = :reportId")
+    Report findByIdWithRelations(@Param("reportId") Long reportId);
+    
+    /**
      * Find reports by multiple visit IDs
      * 
      * @param visitIds List of visit IDs
@@ -51,4 +74,12 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
      */
     @Query("SELECT r FROM Report r WHERE r.visit.visitId IN :visitIds")
     List<Report> findByVisitIdIn(@Param("visitIds") List<Long> visitIds);
+    
+    /**
+     * Count reports created after a specific date
+     * 
+     * @param date The date after which to count reports
+     * @return Count of reports
+     */
+    Long countByCreatedDateAfter(LocalDateTime date);
 }

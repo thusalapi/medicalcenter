@@ -2,8 +2,10 @@ package com.isnoc.medicalcenter.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.isnoc.medicalcenter.dto.ReportDTO;
+import com.isnoc.medicalcenter.dto.StatisticsDTO;
 import com.isnoc.medicalcenter.entity.Report;
 import com.isnoc.medicalcenter.service.ReportService;
+import com.isnoc.medicalcenter.service.StatisticsService;
 import com.isnoc.medicalcenter.util.MapperUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -13,18 +15,31 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/reports")
+@RequestMapping("/api/reports")
 public class ReportController {
 
     private final ReportService reportService;
-
+    private final StatisticsService statisticsService;
+    
     @Autowired
-    public ReportController(ReportService reportService) {
+    public ReportController(ReportService reportService, StatisticsService statisticsService) {
         this.reportService = reportService;
+        this.statisticsService = statisticsService;
+    }
+    
+    @GetMapping("/statistics")
+    public ResponseEntity<Map<String, Object>> getReportStatistics() {
+        StatisticsDTO stats = statisticsService.getReportStatistics();
+        Map<String, Object> response = new HashMap<>();
+        response.put("total", stats.getTotalReports());
+        response.put("pendingReports", stats.getPendingReports());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
@@ -67,5 +82,30 @@ public class ReportController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdfBytes);
+    }
+    
+    @GetMapping(value = "/{id}/pdf-with-labels", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> generateReportPdfWithLabels(@PathVariable("id") Long reportId) throws IOException {
+        Report report = reportService.getReportById(reportId);
+        byte[] pdfBytes = reportService.generateReportPdfWithLabels(reportId);
+        
+        String filename = "Report_" + reportId + "_" + report.getReportType().getReportName().replaceAll("\\s+", "_") + "_formatted.pdf";
+        
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
+    }
+    
+    @GetMapping("/{id}/field-labels")
+    public ResponseEntity<Map<String, String>> getFieldLabelsForReport(@PathVariable("id") Long reportId) {
+        Map<String, String> fieldLabels = reportService.getFieldLabelsForReport(reportId);
+        return ResponseEntity.ok(fieldLabels);
+    }
+    
+    @GetMapping("/{id}/data-with-labels")
+    public ResponseEntity<Map<String, Object>> getReportDataWithLabels(@PathVariable("id") Long reportId) {
+        Map<String, Object> reportDataWithLabels = reportService.getReportDataWithLabels(reportId);
+        return ResponseEntity.ok(reportDataWithLabels);
     }
 }

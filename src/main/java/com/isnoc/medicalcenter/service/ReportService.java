@@ -5,6 +5,7 @@ import com.isnoc.medicalcenter.entity.Report;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public interface ReportService {
     /**
@@ -47,4 +48,29 @@ public interface ReportService {
      * @throws IOException if there's an error generating the PDF
      */
     byte[] generateReportPdf(Long reportId) throws IOException;
+    
+    /**
+     * Generate PDF with human-readable field names instead of field IDs
+     * 
+     * @param reportId ID of the report to generate PDF for
+     * @return PDF as byte array with formatted field names
+     * @throws IOException if there's an error generating the PDF
+     */
+    byte[] generateReportPdfWithLabels(Long reportId) throws IOException;
+    
+    /**
+     * Get field labels mapped from field IDs using the report's template
+     * 
+     * @param reportId ID of the report
+     * @return Map of field IDs/names to human-readable labels
+     */
+    Map<String, String> getFieldLabelsForReport(Long reportId);
+    
+    /**
+     * Get report data with human-readable field names instead of field IDs
+     * 
+     * @param reportId ID of the report
+     * @return Map of human-readable field names to field values
+     */
+    Map<String, Object> getReportDataWithLabels(Long reportId);
 }

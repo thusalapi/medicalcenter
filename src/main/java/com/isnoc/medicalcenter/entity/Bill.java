@@ -2,11 +2,6 @@ package com.isnoc.medicalcenter.entity;
 
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.math.BigDecimal; // Use BigDecimal for monetary values
 import java.time.LocalDateTime;
@@ -15,10 +10,6 @@ import java.util.List;
 
 @Entity
 @Table(name = "bills")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 public class Bill {
 
     @Id
@@ -34,12 +25,60 @@ public class Bill {
 
     private LocalDateTime billDate = LocalDateTime.now();
 
-    // If using detailed BillItems:
-    // @OneToMany(mappedBy = "bill", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    // private List<BillItem> items = new ArrayList<>();
-
     @OneToMany(mappedBy = "bill", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<BillItem> items = new ArrayList<>(); // Initialize the list
+    
+    // Constructors
+    public Bill() {}
+    
+    public Bill(Long billId, Visit visit, BigDecimal totalAmount, LocalDateTime billDate, List<BillItem> items) {
+        this.billId = billId;
+        this.visit = visit;
+        this.totalAmount = totalAmount;
+        this.billDate = billDate;
+        this.items = items;
+    }
+    
+    // Getters and setters
+    public Long getBillId() {
+        return billId;
+    }
+    
+    public void setBillId(Long billId) {
+        this.billId = billId;
+    }
+    
+    public Visit getVisit() {
+        return visit;
+    }
+    
+    public void setVisit(Visit visit) {
+        this.visit = visit;
+    }
+    
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+    
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+    
+    public LocalDateTime getBillDate() {
+        return billDate;
+    }
+    
+    public void setBillDate(LocalDateTime billDate) {
+        this.billDate = billDate;
+    }
+    
+    public List<BillItem> getItems() {
+        return items;
+    }
+    
+    public void setItems(List<BillItem> items) {
+        this.items = items;
+    }
 
     // Helper method to add items and manage the bidirectional relationship
     public void addItem(BillItem item) {
