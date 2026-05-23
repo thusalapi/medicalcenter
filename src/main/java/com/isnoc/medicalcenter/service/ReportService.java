@@ -14,6 +14,8 @@ public interface ReportService {
      * @param reportId ID of the report to retrieve
      * @return the Report entity
      */
+    List<Report> getAllReports();
+
     Report getReportById(Long reportId);
     
     /**

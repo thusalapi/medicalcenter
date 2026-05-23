@@ -107,6 +107,10 @@ public class MapperUtils {
         // Set visit information if available
         if (report.getVisit() != null) {
             dto.setVisitId(report.getVisit().getVisitId());
+            dto.setVisitDate(report.getVisit().getVisitDate());
+            if (report.getVisit().getPatient() != null) {
+                dto.setPatientName(report.getVisit().getPatient().getName());
+            }
         }
         
         // Set report type information if available

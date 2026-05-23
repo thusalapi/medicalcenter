@@ -38,6 +38,11 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
+    public List<Report> getAllReports() {
+        return reportRepository.findAllWithRelations();
+    }
+
+    @Override
     public Report getReportById(Long reportId) {
         Report report = reportRepository.findByIdWithRelations(reportId);
         if (report == null) {

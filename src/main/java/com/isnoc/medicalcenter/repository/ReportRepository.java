@@ -67,6 +67,16 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     Report findByIdWithRelations(@Param("reportId") Long reportId);
     
     /**
+     * Find all reports with eagerly loaded related entities
+     */
+    @Query("SELECT r FROM Report r " +
+           "LEFT JOIN FETCH r.reportType " +
+           "LEFT JOIN FETCH r.visit v " +
+           "LEFT JOIN FETCH v.patient " +
+           "ORDER BY r.createdDate DESC")
+    List<Report> findAllWithRelations();
+
+    /**
      * Find reports by multiple visit IDs
      * 
      * @param visitIds List of visit IDs

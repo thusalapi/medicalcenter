@@ -33,6 +33,15 @@ public class ReportController {
         this.statisticsService = statisticsService;
     }
     
+    @GetMapping
+    public ResponseEntity<List<ReportDTO>> getAllReports() {
+        List<Report> reports = reportService.getAllReports();
+        List<ReportDTO> dtos = reports.stream()
+                .map(MapperUtils::mapReportToDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
+
     @GetMapping("/statistics")
     public ResponseEntity<Map<String, Object>> getReportStatistics() {
         StatisticsDTO stats = statisticsService.getReportStatistics();

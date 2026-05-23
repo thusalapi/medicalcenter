@@ -17,7 +17,9 @@ public class ReportDTO {
     private Long reportId;
     private Long visitId;
     private Long reportTypeId;
-    private String reportTypeName; // For display
+    private String reportTypeName;
+    private String patientName;
+    private LocalDateTime visitDate;
     private JsonNode reportData;
     private LocalDateTime createdDate;
     private LocalDateTime lastModifiedDate;
