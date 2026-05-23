@@ -142,9 +142,13 @@ public class MapperUtils {
         dto.setBillId(bill.getBillId());
         if (bill.getVisit() != null) {
             dto.setVisitId(bill.getVisit().getVisitId());
+            if (bill.getVisit().getPatient() != null) {
+                dto.setPatientName(bill.getVisit().getPatient().getName());
+            }
         }
         dto.setBillDate(bill.getBillDate());
         dto.setTotalAmount(bill.getTotalAmount());
+        dto.setStatus("pending");
 
         if (bill.getItems() != null) {
             dto.setItems(bill.getItems().stream()

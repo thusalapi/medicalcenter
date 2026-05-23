@@ -17,7 +17,9 @@ import java.util.List;
 public class BillDTO {
     private Long billId;
     private Long visitId;
+    private String patientName;
     private LocalDateTime billDate;
     private BigDecimal totalAmount;
+    private String status;
     private List<BillItemDTO> items;
 }
