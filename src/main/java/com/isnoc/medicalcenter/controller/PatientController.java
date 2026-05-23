@@ -11,7 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/patients")
@@ -22,6 +24,16 @@ public class PatientController {
     @Autowired
     public PatientController(PatientService patientService) {
         this.patientService = patientService;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<PatientDTO>> getAllPatients(
+            @RequestParam(required = false) String search) {
+        List<Patient> patients = patientService.getAllPatients(search);
+        List<PatientDTO> dtos = patients.stream()
+                .map(MapperUtils::mapPatientToDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
     @GetMapping("/lookup")
