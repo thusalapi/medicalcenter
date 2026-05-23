@@ -58,7 +58,7 @@ public class VisitServiceImpl implements VisitService {
         
         Visit visit = new Visit();
         visit.setPatient(patient);
-        visit.setVisitDate(visitDate != null ? visitDate : LocalDateTime.now());
+        visit.setVisitDate(visitDate != null ? visitDate.withNano(0) : LocalDateTime.now().withNano(0));
         
         return visitRepository.save(visit);
     }    @Override
